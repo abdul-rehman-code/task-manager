@@ -14,7 +14,7 @@ class UserTaskHistoryExportController extends Controller
         $authUser = $request->user();
 
         abort_unless(
-            $authUser && ($authUser->isAdmin() || $authUser->isManager() || $authUser->isEmployee()),
+            $authUser && ($authUser->isAdmin() || $authUser->can('view_reports')),
             403
         );
 
