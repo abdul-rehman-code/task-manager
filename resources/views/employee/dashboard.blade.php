@@ -1,0 +1,368 @@
+@extends('layouts.employee')
+
+@section('content')
+<!-- Scrollable Main Content -->
+<div class="flex-1 overflow-y-auto bg-[#FAFAFB] p-6 lg:p-8">
+    
+    <!-- Top Bar (Desktop) -->
+    <div class="hidden md:flex justify-between items-center mb-8">
+        <div class="relative w-96">
+            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+            <input type="text" placeholder="Search tasks, projects..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all-fast placeholder:text-slate-400 shadow-sm">
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button class="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                <i class="ph ph-bell text-2xl"></i>
+                <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 border-[#FAFAFB]"></span>
+            </button>
+            <div class="relative group">
+                <div class="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer">
+                    <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=6366f1&color=fff' }}" alt="Profile" class="w-10 h-10 rounded-full shadow-sm object-cover">
+                    <div class="hidden lg:block">
+                        <p class="text-sm font-bold text-slate-800 leading-tight">{{ $user->name }}</p>
+                        <p class="text-xs text-slate-500">{{ ucfirst($user->role) ?? 'Employee' }}</p>
+                    </div>
+                    <i class="ph ph-caret-down text-slate-400 text-xs ml-1"></i>
+                </div>
+                
+                <!-- Dropdown -->
+                <div class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 p-4">
+                    <div class="flex flex-col items-center pb-4 border-b border-slate-100">
+                        <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=6366f1&color=fff' }}" class="w-16 h-16 rounded-full mb-2 border-2 border-indigo-100 shadow-sm object-cover">
+                        <h3 class="font-bold text-slate-800">{{ $user->name }}</h3>
+                        <p class="text-xs text-slate-500">{{ $user->email }}</p>
+                    </div>
+                    <div class="pt-4 space-y-3">
+                        <div class="flex gap-3 items-start">
+                            <i class="ph ph-buildings text-slate-400 mt-0.5"></i>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase">Department</p>
+                                <p class="text-sm font-medium text-slate-700">{{ $user->department->name ?? 'IT Department' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <i class="ph ph-phone text-slate-400 mt-0.5"></i>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase">Phone</p>
+                                <p class="text-sm font-medium text-slate-700">{{ $user->email ?? 'abc@gmail.com' }}</p>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100">
+                             <form method="POST" action="{{ route('employee.logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-rose-500 hover:bg-rose-50 font-medium transition-all-fast text-sm">
+                                    <i class="ph ph-sign-out text-lg"></i>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Section -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                Welcome back, {{ explode(' ', trim($user->name))[0] }}! 👋
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">Here's what's happening with your tasks today.</p>
+        </div>
+        <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-medium text-slate-700">
+            {{ now()->format('M d, Y') }}
+            <i class="ph ph-calendar-blank text-lg text-slate-400"></i>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+        <!-- Pending Tasks -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-indigo-500 rounded-b-2xl"></div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                <i class="ph-fill ph-clipboard-text text-2xl"></i>
+            </div>
+            <h3 class="text-3xl font-bold text-slate-800">{{ $pendingTasks ?? 0 }}</h3>
+            <p class="text-sm font-semibold text-slate-800 mt-1">Pending Tasks</p>
+            <p class="text-xs text-slate-500 mt-1">Tasks waiting to start</p>
+        </div>
+        
+        <!-- In Progress -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-amber-500 rounded-b-2xl"></div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                <i class="ph-fill ph-clock-countdown text-2xl"></i>
+            </div>
+            <h3 class="text-3xl font-bold text-slate-800">{{ $inProgressTasks }}</h3>
+            <p class="text-sm font-semibold text-slate-800 mt-1">In Progress</p>
+            <p class="text-xs text-slate-500 mt-1">Tasks in progress</p>
+        </div>
+
+        <!-- Completed -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-b-2xl"></div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                <i class="ph-fill ph-check-circle text-2xl"></i>
+            </div>
+            <h3 class="text-3xl font-bold text-slate-800">{{ $completedTasks }}</h3>
+            <p class="text-sm font-semibold text-slate-800 mt-1">Completed</p>
+            <p class="text-xs text-slate-500 mt-1">Tasks completed</p>
+        </div>
+
+        <!-- Overdue -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group">
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-rose-500 rounded-b-2xl"></div>
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                <i class="ph-fill ph-hourglass-high text-2xl"></i>
+            </div>
+            <h3 class="text-3xl font-bold text-slate-800">{{ $overdueTasks }}</h3>
+            <p class="text-sm font-semibold text-slate-800 mt-1">Overdue</p>
+            <p class="text-xs text-slate-500 mt-1">Tasks overdue</p>
+        </div>
+    </div>
+
+    <!-- Create New Task Form -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm mb-8 overflow-hidden">
+        <div class="p-5 md:p-6 border-b border-slate-100 bg-indigo-50/30">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="ph-fill ph-plus-circle text-indigo-500"></i>
+                Create New Task
+            </h3>
+        </div>
+        <div class="p-5 md:p-6">
+            <form action="{{ route('employee.tasks.store') }}" method="POST">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Task Title</label>
+                        <input type="text" name="title" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="E.g., Update homepage banner">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Estimated Time (Minutes)</label>
+                        <input type="number" name="estimated_minutes" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="E.g., 60">
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Description (Optional)</label>
+                    <textarea name="description" rows="3" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="Briefly describe what needs to be done..."></textarea>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm flex items-center gap-2">
+                        Save Task
+                        <i class="ph ph-paper-plane-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- My Tasks List -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm mb-8">
+        <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800">My Tasks</h3>
+            <form action="{{ route('employee.dashboard') }}" method="GET" class="inline-flex">
+                <select name="status" onchange="this.form.submit()" class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 transition-colors focus:outline-none">
+                    <option value="">All Status</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                    <option value="blockage" {{ request('status') === 'blockage' ? 'selected' : '' }}>Blockage</option>
+                    <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                </select>
+            </form>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                        <th class="py-4 px-6 font-semibold">#</th>
+                        <th class="py-4 px-6 font-semibold">Task Title</th>
+                        <th class="py-4 px-6 font-semibold text-center">Status</th>
+                        <th class="py-4 px-6 font-semibold text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    @forelse($tasks as $index => $task)
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                        <td class="py-4 px-6 text-slate-400 font-medium">{{ $tasks->firstItem() + $index }}</td>
+                        <td class="py-4 px-6">
+                            <p class="font-bold text-slate-800 mb-0.5">{{ $task->title }}</p>
+                            <p class="text-xs text-slate-500 truncate max-w-xs">{!! strip_tags($task->description) !!}</p>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            @php
+                                $statusClass = match($task->status) {
+                                    'completed' => 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+                                    'in_progress' => 'bg-indigo-50 text-indigo-600 border border-indigo-200',
+                                    default => 'bg-amber-50 text-amber-600 border border-amber-200'
+                                };
+                                $statusLabel = match($task->status) {
+                                    'completed' => 'Completed',
+                                    'in_progress' => 'In Progress',
+                                    default => 'Pending'
+                                };
+                                if ($task->is_blocked) {
+                                    $statusClass = 'bg-red-50 text-red-600 border border-red-200';
+                                    $statusLabel = 'Blockage';
+                                }
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
+                                {{ $statusLabel }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <form action="{{ route('employee.tasks.status', $task) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="pending">
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 border text-xs font-semibold {{ $task->status === 'pending' && !$task->is_blocked ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-white border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300' }} transition-colors">
+                                        <i class="ph-fill ph-clock"></i> Pending
+                                    </button>
+                                </form>
+                                <form action="{{ route('employee.tasks.status', $task) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 border text-xs font-semibold {{ $task->status === 'in_progress' && !$task->is_blocked ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300' }} transition-colors">
+                                        <i class="ph-fill ph-play-circle"></i> In Progress
+                                    </button>
+                                </form>
+                                <form action="{{ route('employee.tasks.status', $task) }}" method="POST" onsubmit="if(!this.block_reason.value){ let reason = prompt('Enter reason for blockage:'); if(reason) { this.block_reason.value = reason; return true; } return false; } return true;">
+                                    @csrf
+                                    <input type="hidden" name="status" value="blockage">
+                                    <input type="hidden" name="block_reason" value="">
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 border text-xs font-semibold {{ $task->is_blocked ? 'bg-red-100 border-red-300 text-red-700' : 'bg-white border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-300' }} transition-colors">
+                                        <i class="ph-fill ph-warning-octagon"></i> Blockage
+                                    </button>
+                                </form>
+                                <form action="{{ route('employee.tasks.status', $task) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 border text-xs font-semibold {{ $task->status === 'completed' ? 'bg-emerald-100 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-500 hover:text-emerald-600 hover:border-emerald-300' }} transition-colors">
+                                        <i class="ph-fill ph-check-circle"></i> Completed
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-500">
+                            No tasks found for you right now.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        @if($tasks->hasPages())
+        <div class="p-4 border-t border-slate-100">
+            {{ $tasks->links() }}
+        </div>
+        @else
+        <div class="p-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
+            <span>Showing {{ $tasks->count() }} of {{ $tasks->total() }} tasks</span>
+            <div class="flex gap-1">
+                <button class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center opacity-50 cursor-not-allowed"><i class="ph ph-caret-left"></i></button>
+                <button class="w-8 h-8 rounded bg-indigo-600 text-white flex items-center justify-center font-medium">1</button>
+                <button class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center opacity-50 cursor-not-allowed"><i class="ph ph-caret-right"></i></button>
+            </div>
+        </div>
+        @endif
+    </div>
+
+    <!-- Bottom Sections Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+        
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">Recent Activity</h3>
+                <a href="#" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">View All</a>
+            </div>
+            <div class="p-5 md:p-6 space-y-6">
+                @forelse($recentActivity as $activity)
+                <div class="flex gap-4">
+                    <div class="relative mt-1">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center z-10 relative">
+                            <i class="ph-fill ph-check-circle text-lg"></i>
+                        </div>
+                        @if(!$loop->last)
+                        <div class="absolute top-8 left-1/2 -translate-x-1/2 w-px h-10 bg-slate-200"></div>
+                        @endif
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">{{ $activity->description ?? ($activity->action . ' task') }}</p>
+                        <p class="text-xs text-slate-500 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-4 text-slate-500 text-sm">
+                    No recent activity to show.
+                </div>
+                @endforelse
+                
+                <!-- Mock Activity for UI visualization if DB is empty -->
+                @if($recentActivity->isEmpty())
+                <div class="flex gap-4">
+                    <div class="relative mt-1">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center z-10 relative">
+                            <i class="ph-fill ph-play-circle text-lg"></i>
+                        </div>
+                        <div class="absolute top-8 left-1/2 -translate-x-1/2 w-px h-10 bg-slate-200"></div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">You started working on '<span class="font-bold">Fix Dashboard Bug</span>'</p>
+                        <p class="text-xs text-slate-500 mt-1">3 hours ago</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="relative mt-1">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center z-10 relative">
+                            <i class="ph-fill ph-file-text text-lg"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">New task '<span class="font-bold">API Integration</span>' assigned to you</p>
+                        <p class="text-xs text-slate-500 mt-1">1 day ago</p>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Upcoming Deadlines -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">Upcoming Deadlines</h3>
+                <a href="#" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">View Calendar</a>
+            </div>
+            <div class="p-5 md:p-6 space-y-4">
+                @forelse($upcomingDeadlines as $deadline)
+                <div class="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
+                        <i class="ph ph-calendar-blank text-xl"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-slate-800 truncate">{{ $deadline->title }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ \Carbon\Carbon::parse($deadline->due_date)->format('M d, Y') }}</p>
+                    </div>
+                    <span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-rose-50 text-rose-600 uppercase tracking-wide">
+                        Urgent
+                    </span>
+                </div>
+                @empty
+                <div class="text-center py-4 text-slate-500 text-sm">
+                    No upcoming deadlines.
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@endsection
